@@ -26,6 +26,7 @@ def listen_for(port: tp.Tuple[int, int]) -> None:
     client to connect
     """
     serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serv.bind(("0.0.0.0", port[0]))
     serv.listen()
 
@@ -91,6 +92,7 @@ class Client:
 
         # "client client" setup
         self.__client_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__client_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__client_server.bind(("0.0.0.0", port))
         self.__client_server.listen()
 
@@ -149,7 +151,7 @@ class Client:
             try:
                 # receive message and forward it to the actual server
                 print(f"waiting for message")
-                msg = self.__client_client.recv(2048)
+                msg = self.__client_client.recv(4096)
                 print(f"got message: {msg}")
                 self.__server.send(msg)
 
@@ -170,7 +172,7 @@ class Client:
         self.__server.settimeout(.1)
         while self.running:
             try:
-                msg = self.__server.recv(2048)
+                msg = self.__server.recv(4096)
                 if self.__client_client is ...:
                     buffer.append(msg)
                     continue
@@ -198,7 +200,7 @@ def listen() -> None:
         Thread(target=listen_for, args=[p]).start()
 
 
-def main() -> None:
+def main() -> int:
     to_catch = [
         signal.SIGINT,
         signal.SIGTERM
@@ -209,6 +211,7 @@ def main() -> None:
 
     listen()
     input("Press Enter to stop")
+    return 0
 
 
 def terminate(*signals) -> None:
@@ -222,4 +225,4 @@ def terminate(*signals) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    terminate(main())
